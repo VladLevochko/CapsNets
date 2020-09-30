@@ -1,1 +1,1 @@
-python main.py
+cd src && python main.py

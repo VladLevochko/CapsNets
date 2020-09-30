@@ -11,7 +11,7 @@ class MarginLoss(Module):
     def forward(self, y_predicted, y_true):
         value = y_true * torch.clamp(self.m_plus - y_predicted, min=0.) ** 2 \
             + self.lambda_reconstruction * (1 - self.m_plus) * torch.clamp(y_predicted - (1 - self.m_plus), min=0.) ** 2
-        return value.sum(dim=1)
+        return value.sum()
 
 
 class CapsuleLoss(Module):
