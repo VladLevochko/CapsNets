@@ -6,12 +6,12 @@ from layers import PrimaryCapsules, RoutingCapsules
 
 
 class CapsNetMnist(Module):
-    def __init__(self):
+    def __init__(self, device):
         super().__init__()
 
         self.conv1 = Conv2d(1, 256, 9)
         self.primary = PrimaryCapsules(256, 256, 8, 9)
-        self.dense = RoutingCapsules(8, 16, 1152, 10, 3)
+        self.dense = RoutingCapsules(8, 16, 1152, 10, 3, device)
 
         self.decoder = Sequential(
             Linear(16 * 10, 512),

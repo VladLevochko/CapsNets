@@ -10,9 +10,9 @@ from train import Trainer
 
 def parse_arguments():
     parser = ArgumentParser()
-    parser.add_argument("--batch_size", default=32)
-    parser.add_argument("--epochs", default=10)
-    parser.add_argument("--lr", default=0.1)
+    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--lr", type=float, default=1e-3)
 
     return parser.parse_args()
 

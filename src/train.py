@@ -11,8 +11,9 @@ class Trainer:
     def __init__(self, train_loader, test_loader, device, learning_rate):
         self.train_loader = train_loader
         self.test_loader = test_loader
+        self.device = device
 
-        self.model = CapsNetMnist().to(device)
+        self.model = CapsNetMnist(device).to(device)
         self.loss = CapsuleLoss()
         self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
 
@@ -27,6 +28,7 @@ class Trainer:
         total_predictions = 0
         total_loss = 0
         for images, labels in tqdm(self.train_loader):
+            images, labels = images.to(self.device), labels.to(self.device)
             self.optimizer.zero_grad()
 
             predictions, reconstructions = self.model(images, labels)
@@ -47,6 +49,7 @@ class Trainer:
         correct_predictions = 0
         total_predictions = 0
         for images, labels in tqdm(self.test_loader):
+            images, labels = images.to(self.device), labels.to(self.device)
             predictions, reconstruction = self.model(images, labels)
 
             _, predictions = predictions.max(dim=1)
