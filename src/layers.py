@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import Variable
 from torch.nn import Module, Conv2d, Parameter
 
 
@@ -11,8 +12,9 @@ class PrimaryCapsules(Module):
 
     def forward(self, x):
         output = self.conv(x)
-        output = output.view(x.size(0), -1, self.caps_channels)
-        # output = output.view(x.size(0), self.caps_channels, -1)
+        # output = output.view(x.size(0), -1, self.caps_channels)
+        output = output.view(x.size(0), self.caps_channels, -1)
+        output = output.transpose(1, 2)
         output = self.squash(output)
 
         return output
@@ -26,7 +28,7 @@ class RoutingCapsules(Module):
         self.routings_number = routings_number
         self.device = device
 
-        self.w = Parameter(torch.zeros(1, capsules_number, in_capsules_number, out_channels, in_channels))
+        self.w = Parameter(0.01 * torch.randn(1, capsules_number, in_capsules_number, out_channels, in_channels))
         self.squash = Squash()
 
     def forward(self, x):
@@ -35,7 +37,7 @@ class RoutingCapsules(Module):
         u_hat = u_hat.squeeze(-1)
         u_hat_detached = u_hat.detach()
 
-        b = torch.zeros(x.size(0), self.capsules_number, self.in_capsules_number, 1).to(self.device)
+        b = Variable(torch.randn(x.size(0), self.capsules_number, self.in_capsules_number, 1)).to(self.device)
 
         for i in range(self.routings_number - 1):
             c = torch.softmax(b, dim=1)

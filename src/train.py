@@ -1,5 +1,4 @@
 import torch
-from torch.nn.functional import one_hot
 from torch.optim import Adam
 
 from capsnet import CapsNetMnist
@@ -14,7 +13,7 @@ class Trainer:
         self.device = device
 
         self.model = CapsNetMnist(device).to(device)
-        self.loss = CapsuleLoss()
+        self.loss = CapsuleLoss().to(device)
         self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
 
     def run(self, epochs_number):
@@ -24,6 +23,8 @@ class Trainer:
             self.eval_step()
 
     def train_step(self):
+        self.model.train()
+
         correct_predictions = 0
         total_predictions = 0
         total_loss = 0
@@ -32,7 +33,7 @@ class Trainer:
             self.optimizer.zero_grad()
 
             predictions, reconstructions = self.model(images, labels)
-            loss = self.loss(predictions, one_hot(labels, 10), reconstructions, images)
+            loss = self.loss(predictions, labels, reconstructions, images)
             loss.backward()
             total_loss += loss.item()
             self.optimizer.step()
@@ -46,6 +47,8 @@ class Trainer:
         print("Train loss {} accuracy {}".format(total_loss, epoch_accuracy))
 
     def eval_step(self):
+        self.model.eval()
+
         correct_predictions = 0
         total_predictions = 0
         for images, labels in tqdm(self.test_loader):

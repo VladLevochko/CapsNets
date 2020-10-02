@@ -10,6 +10,7 @@ class CapsNetMnist(Module):
         super().__init__()
 
         self.conv1 = Conv2d(1, 256, 9)
+        self.relu = ReLU()
         self.primary = PrimaryCapsules(256, 256, 8, 9)
         self.dense = RoutingCapsules(8, 16, 1152, 10, 3, device)
 
@@ -24,6 +25,7 @@ class CapsNetMnist(Module):
 
     def forward(self, input, label=None):
         x = self.conv1(input)
+        x = self.relu(x)
         x = self.primary(x)
         x = self.dense(x)
         length = torch.norm(x, dim=-1)
