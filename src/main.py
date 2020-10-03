@@ -4,14 +4,15 @@ from argparse import ArgumentParser
 from torch.utils.tensorboard import SummaryWriter
 
 from data_provider import DataProvider
-from train import Trainer
+from train import TrainerFactory
 
-# TODO: check dependency between accuracy and lr, try different lr scheduler
-# TODO: check why loss is so high
+
+# TODO: try different kernel sizes
 
 
 def parse_arguments():
     parser = ArgumentParser()
+    parser.add_argument("--experiment", type=str, choices=["caps", "conv"], default="caps")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -31,7 +32,8 @@ def main(parameters):
 
     writer = SummaryWriter()
 
-    trainer = Trainer(train_loader, test_loader, writer, parameters["device"], parameters["lr"])
+    trainer_type = parameters["experiment"] + "net"
+    trainer = TrainerFactory.create_trainer(trainer_type, train_loader, test_loader, writer, **parameters)
     trainer.run(parameters["epochs"])
 
     writer.close()
