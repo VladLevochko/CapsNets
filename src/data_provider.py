@@ -60,10 +60,11 @@ class DataProvider:
 
         classes = defaultdict(list)
         for i, target in enumerate(targets):
-            classes[target].append(i)
+            classes[target.item()].append(i)
         selected = []
         for _, indices in classes.items():
-            selected.extend(indices[:len(indices) * reduction_factor])
+            elements_number = round(len(indices) * reduction_factor)
+            selected.extend(indices[:elements_number])
         selected.sort()
 
         dataset.data, dataset.targets = data[selected], targets[selected]
