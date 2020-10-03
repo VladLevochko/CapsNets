@@ -48,6 +48,7 @@ class DataProvider:
         train_dataset = self.reduce_dataset(train_dataset, reduction_factor)
         test_dataset = MNIST(data_path, train=False, download=download,
                         transform=Compose([RandomCrop(size=28, padding=2), ToTensor()]))
+        # test_dataset = self.reduce_dataset(test_dataset, reduction_factor)
 
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)

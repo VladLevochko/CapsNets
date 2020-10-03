@@ -123,7 +123,7 @@ class ConvNetTrainer(Trainer):
             images, labels = images.to(self.device), labels.to(self.device)
             self.optimizer.zero_grad()
 
-            predictions = self.model(images, labels)
+            predictions = self.model(images)
             loss = self.loss(predictions, labels)
             loss.backward()
             total_loss += loss.item()
@@ -146,7 +146,8 @@ class ConvNetTrainer(Trainer):
         correct_predictions = 0
         total_loss = 0
         for images, labels in tqdm(self.test_loader):
-            predictions = self.model(images, labels)
+            images, labels = images.to(self.device), labels.to(self.device)
+            predictions = self.model(images)
             loss = self.loss(predictions, labels)
             total_loss += loss.item()
 
