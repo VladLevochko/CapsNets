@@ -4,7 +4,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ExponentialLR
 
 from capsnet import CapsNetMnist
-from convnet import ConvNet
+from convnet import ConvNet, ConvNetLarge
 from loss import CapsuleLoss
 from tqdm import tqdm
 
@@ -28,6 +28,8 @@ class Trainer:
         self.lr_decay = lr_decay
 
         self.scheduler = None
+        self.best_accuracy = 0
+        self.best_accuracy_epoch = -1
 
     def run(self, epochs_number):
         for epoch in range(epochs_number):
@@ -38,6 +40,8 @@ class Trainer:
             self.eval_step(epoch)
 
             self.scheduler.step()
+
+        print("Best accuracy {} on epoch {}".format(self.best_accuracy, self.best_accuracy_epoch))
 
     def train_step(self, epoch):
         raise Exception("Not implemented!")
@@ -88,6 +92,7 @@ class CapsNetTrainer(Trainer):
         correct_predictions = 0
         total_loss = 0
         for images, labels in tqdm(self.test_loader):
+            images, labels = images.to(self.device), labels.to(self.device)
             predictions, reconstructions = self.model(images, labels)
             loss = self.loss(predictions, labels, reconstructions, images)
             total_loss += loss.item()
@@ -97,6 +102,10 @@ class CapsNetTrainer(Trainer):
 
         total_predictions = len(self.test_loader.dataset)
         epoch_accuracy = torch.true_divide(correct_predictions, total_predictions)
+
+        if epoch_accuracy >= self.best_accuracy:
+            self.best_accuracy = epoch_accuracy
+            self.best_accuracy_epoch = epoch_number
 
         self.writer.add_scalar("Accuracy/Test", epoch_accuracy, epoch_number)
         self.writer.add_scalar("Loss/Test", total_loss, epoch_number)
@@ -108,7 +117,8 @@ class ConvNetTrainer(Trainer):
     def __init__(self, train_loader, test_loader, writer=None, device="cpu", lr=0.1, lr_decay=0.9, **kwargs):
         super().__init__(train_loader, test_loader, writer, device, lr, lr_decay, **kwargs)
 
-        self.model = ConvNet(device).to(device)
+        # self.model = ConvNet(device).to(device)
+        self.model = ConvNetLarge().to(device)
         self.loss = CrossEntropyLoss().to(device)
 
         self.optimizer = Adam(self.model.parameters(), lr=self.lr)
@@ -156,6 +166,10 @@ class ConvNetTrainer(Trainer):
 
         total_predictions = len(self.test_loader.dataset)
         epoch_accuracy = torch.true_divide(correct_predictions, total_predictions)
+
+        if epoch_accuracy >= self.best_accuracy:
+            self.best_accuracy = epoch_accuracy
+            self.best_accuracy_epoch = epoch_number
 
         self.writer.add_scalar("Accuracy/Test", epoch_accuracy, epoch_number)
         self.writer.add_scalar("Loss/Test", total_loss, epoch_number)
