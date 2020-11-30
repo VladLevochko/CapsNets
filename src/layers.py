@@ -4,31 +4,29 @@ from torch.nn import Module, Conv2d, Parameter
 
 
 class PrimaryCapsules(Module):
-    def __init__(self, in_channels, out_channels, caps_channels, kernel_size=9):
+    def __init__(self, in_channels, out_channels, out_capsules, kernel_size=9):
         super().__init__()
-        self.caps_channels = caps_channels
+        self.out_capsules = out_capsules
         self.conv = Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=2)
         self.squash = Squash()
 
     def forward(self, x):
         output = self.conv(x)
-        # output = output.view(x.size(0), -1, self.caps_channels)
-        output = output.view(x.size(0), self.caps_channels, -1)
-        output = output.transpose(1, 2)
+        output = output.view(x.size(0), -1, self.out_capsules)
         output = self.squash(output)
 
         return output
 
 
 class RoutingCapsules(Module):
-    def __init__(self, in_channels, out_channels, in_capsules_number, capsules_number, routings_number, device):
+    def __init__(self, in_capsules_number, out_capsules_number, in_channels, out_channels, routings_number, device):
         super().__init__()
-        self.capsules_number = capsules_number
         self.in_capsules_number = in_capsules_number
+        self.out_capsules_number = out_capsules_number
         self.routings_number = routings_number
         self.device = device
 
-        self.w = Parameter(0.01 * torch.randn(1, capsules_number, in_capsules_number, out_channels, in_channels))
+        self.w = Parameter(0.01 * torch.randn(1, out_capsules_number, in_capsules_number, out_channels, in_channels))
         self.squash = Squash()
 
     def forward(self, x):
@@ -37,7 +35,7 @@ class RoutingCapsules(Module):
         u_hat = u_hat.squeeze(-1)
         u_hat_detached = u_hat.detach()
 
-        b = Variable(torch.randn(x.size(0), self.capsules_number, self.in_capsules_number, 1)).to(self.device)
+        b = Variable(torch.randn(x.size(0), self.out_capsules_number, self.in_capsules_number, 1)).to(self.device)
 
         for i in range(self.routings_number - 1):
             c = torch.softmax(b, dim=1)

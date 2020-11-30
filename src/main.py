@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from torch.utils.tensorboard import SummaryWriter
 
 from data_provider import DataProvider
-from train import TrainerFactory
+from trainer import TrainerFactory
 
 
 # TODO: try different kernel sizes

@@ -19,7 +19,8 @@ class TrainerFactory:
 
 
 class Trainer:
-    def __init__(self, train_loader, test_loader, writer=None, device="cpu", lr=0.1, lr_decay=0.9, **kwargs):
+    def __init__(self, train_loader, test_loader, writer=None, device="cpu", lr=0.1, lr_decay=0.9,
+                 test_interval=1, val_interval=1, **kwargs):
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.device = device
@@ -31,23 +32,36 @@ class Trainer:
         self.best_accuracy = 0
         self.best_accuracy_epoch = -1
 
+        self.test_interval = test_interval
+        self.val_interval = val_interval
+
     def run(self, epochs_number):
         for epoch in range(epochs_number):
             print("\nEpoch", epoch)
-            self.writer.add_scalar("lr", self.scheduler.get_last_lr()[0], epoch)
+            if self.scheduler is not None:
+                self.writer.add_scalar("lr", self.scheduler.get_last_lr()[0], epoch)
 
             self.train_step(epoch)
-            self.eval_step(epoch)
 
-            self.scheduler.step()
+            if self.test_interval != 0 and epoch % self.test_interval == 0:
+                self.test_step(epoch)
+
+            if self.val_interval != 0 and epoch % self.val_interval == 0:
+                self.val_step(epoch)
+
+            if self.scheduler is not None:
+                self.scheduler.step()
 
         print("Best accuracy {} on epoch {}".format(self.best_accuracy, self.best_accuracy_epoch))
 
     def train_step(self, epoch):
         raise Exception("Not implemented!")
 
-    def eval_step(self, epoch):
+    def test_step(self, epoch):
         raise Exception("Not implemented!")
+
+    def val_step(self, epoch):
+        pass
 
 
 class CapsNetTrainer(Trainer):
@@ -86,7 +100,7 @@ class CapsNetTrainer(Trainer):
 
         print("Train loss {} accuracy {}".format(total_loss, epoch_accuracy))
 
-    def eval_step(self, epoch_number):
+    def test_step(self, epoch_number):
         self.model.eval()
 
         correct_predictions = 0
@@ -150,7 +164,7 @@ class ConvNetTrainer(Trainer):
 
         print("Train loss {} accuracy {}".format(total_loss, epoch_accuracy))
 
-    def eval_step(self, epoch_number):
+    def test_step(self, epoch_number):
         self.model.eval()
 
         correct_predictions = 0
